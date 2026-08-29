@@ -2,9 +2,10 @@
 // @name        Kagane Downloader
 // @namespace   Violentmonkey Scripts
 // @match       https://kagane.org/series/*
+// @match       https://kagane.to/series/*
 // @icon        https://external-content.duckduckgo.com/ip3/kagane.org.ico
 // @grant       none
-// @version     0.2
+// @version     0.3
 // @author      irasnalida
 // @require     https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js
 // @require     https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js
