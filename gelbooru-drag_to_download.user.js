@@ -3,7 +3,7 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://gelbooru.com/*
 // @icon        https://external-content.duckduckgo.com/ip3/gelbooru.com.ico
-// @version     0.2
+// @version     0.3
 // @author      irasnalida
 // @description gelbooru download
 // @grant       GM_download
@@ -11,53 +11,59 @@
 // @downloadURL https://raw.githubusercontent.com/irasnalida/userscripts/main/gelbooru-drag_to_download.user.js
 // ==/UserScript==
 
-document.addEventListener("dragend", (e) => {
-  // Check if the dragged element is an image
-  if (e.target.tagName.toLowerCase() !== "img") return;
+(function () {
+  document.addEventListener("dragend", (e) => {
+    if (e.target.tagName.toLowerCase() !== "img") return;
 
-  const originalSrc = e.target.src;
+    const originalSrc = e.target.src;
 
-  // Basic check to ensure we only process sample images
-  if (!originalSrc.includes("/samples/") && !originalSrc.includes("sample_"))
-    return;
+    if (!originalSrc.includes("/samples/") && !originalSrc.includes("sample_"))
+      return;
 
-  // Parse the SRC to get the original full-size image link
-  const newSrc = originalSrc
-    .replace("\/samples", "images/")
-    .replace("sample_", "");
+    let newSrc = originalSrc
+      .replace(/\/+samples\//, "/images/")
+      .replace("sample_", "");
 
-  // Extract Artist Name
-  const artistNode = document.querySelector(".tag-type-artist > a");
-  const artist = artistNode ? artistNode.textContent.trim() : "unknown";
-
-  // Extract Date
-  let dateStr = "00000000";
-  const listItems = document.querySelectorAll("li:not([class])");
-  for (const li of listItems) {
-    if (li.textContent.includes("Posted:")) {
-      // Extracts YYYY-MM-DD from text like "Posted: 2025-01-10 15:30:37"
-      const dateMatch = li.textContent.match(
-        /Posted:\s*(\d{4})-(\d{2})-(\d{2})/,
-      );
-      if (dateMatch) {
-        const year = dateMatch[1]; // Keep all 4 digits -> '2025'
-        const month = dateMatch[2]; // '01'
-        const day = dateMatch[3]; // '10'
-        dateStr = `${year}${month}${day}`;
-      }
-      break;
+    const originalImageLink = document.querySelector('a[href*="/images/"]');
+    if (originalImageLink && originalImageLink.href) {
+      newSrc = originalImageLink.href;
     }
-  }
 
-  // Construct Filename
-  const urlParts = newSrc.split("/");
-  const imageNameWithExt = urlParts[urlParts.length - 1];
-  const filename = `[${artist}] ${dateStr} ${imageNameWithExt}`;
+    // Extract Artist Name
+    const artistNode = document.querySelector(".tag-type-artist > a");
+    const artist = artistNode ? artistNode.textContent.trim() : "unknown";
 
-  // Construct Final URL with Hash Parameters
-  // URL-encoding the values ensures spaces and brackets don't break the URL
-  const finalUrl = `${newSrc}#filename=${encodeURIComponent(filename)}&pack=${encodeURIComponent(artist)}`;
+    // Extract Date
+    let dateStr = "00000000";
+    const listItems = document.querySelectorAll("li:not([class])");
+    for (const li of listItems) {
+      if (li.textContent.includes("Posted:")) {
+        // YYYYMMDD
+        const dateMatch = li.textContent.match(/Posted:\s*(\d{4})-(\d{2})-(\d{2})/);
+        if (dateMatch) {
+          dateStr = `${dateMatch[1]}${dateMatch[2]}${dateMatch[3]}`;
+        }
+        break;
+      }
+    }
 
-  console.log(newSrc);
-  GM_download(newSrc, filename);
-});
+    const urlParts = newSrc.split("/");
+    const imageNameWithExt = urlParts[urlParts.length - 1];
+    const filename = `[${artist}] ${dateStr} ${imageNameWithExt}`;
+
+    console.log("Downloading:", newSrc);
+    GM_download({
+      url: newSrc,
+      name: filename,
+      headers: {
+        "Referer": window.location.href
+      },
+      onload: function() {
+        console.log("Download successful:", filename);
+      },
+      onerror: function(error) {
+        console.error("Download failed:", error);
+      }
+    });
+  });
+})();
