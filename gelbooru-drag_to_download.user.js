@@ -3,7 +3,7 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://gelbooru.com/*
 // @icon        https://external-content.duckduckgo.com/ip3/gelbooru.com.ico
-// @version     0.3
+// @version     0.4
 // @author      irasnalida
 // @description gelbooru download
 // @grant       GM_download
@@ -15,18 +15,13 @@
   document.addEventListener("dragend", (e) => {
     if (e.target.tagName.toLowerCase() !== "img") return;
 
-    const originalSrc = e.target.src;
+    let newSrc = e.target.src;
+    newSrc = newSrc.replace(/\/+samples\//, "/images/").replace("sample_", "");
 
-    if (!originalSrc.includes("/samples/") && !originalSrc.includes("sample_"))
-      return;
-
-    let newSrc = originalSrc
-      .replace(/\/+samples\//, "/images/")
-      .replace("sample_", "");
-
-    const originalImageLink = document.querySelector('a[href*="/images/"]');
-    if (originalImageLink && originalImageLink.href) {
-      newSrc = originalImageLink.href;
+    const container = e.target.closest("section.image-container");
+    if (container && container.hasAttribute("data-file-ext")) {
+      const realExt = container.getAttribute("data-file-ext");
+      newSrc = newSrc.replace(/\.[^/.]+$/, realExt);
     }
 
     // Extract Artist Name
@@ -35,34 +30,24 @@
 
     // Extract Date
     let dateStr = "00000000";
-    const listItems = document.querySelectorAll("li:not([class])");
-    for (const li of listItems) {
+    for (const li of document.querySelectorAll("li:not([class])")) {
       if (li.textContent.includes("Posted:")) {
-        // YYYYMMDD
         const dateMatch = li.textContent.match(/Posted:\s*(\d{4})-(\d{2})-(\d{2})/);
-        if (dateMatch) {
-          dateStr = `${dateMatch[1]}${dateMatch[2]}${dateMatch[3]}`;
-        }
+        if (dateMatch) dateStr = `${dateMatch[1]}${dateMatch[2]}${dateMatch[3]}`;
         break;
       }
     }
 
+    // Construct Filename
     const urlParts = newSrc.split("/");
     const imageNameWithExt = urlParts[urlParts.length - 1];
     const filename = `[${artist}] ${dateStr} ${imageNameWithExt}`;
-
     console.log("Downloading:", newSrc);
     GM_download({
       url: newSrc,
       name: filename,
       headers: {
         "Referer": window.location.href
-      },
-      onload: function() {
-        console.log("Download successful:", filename);
-      },
-      onerror: function(error) {
-        console.error("Download failed:", error);
       }
     });
   });
