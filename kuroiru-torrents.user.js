@@ -278,9 +278,30 @@ function addTorrentTab() {
 
           const epSelectCont = document.createElement("div");
           epSelectCont.id = "torrent-epselect-cont";
+          epSelectCont.style.flexDirection = "column";
+          epSelectCont.style.gap = "0";
+
+          // Episode buttons keep their own horizontal scroller inside the sticky bar
+          const epItemsCont = document.createElement("div");
+          epItemsCont.id = "torrent-ep-items-cont";
+          epItemsCont.style.display = "flex";
+          epItemsCont.style.gap = "2px";
+          epItemsCont.style.overflowX = "auto";
+          epItemsCont.style.overflowY = "hidden";
+          epItemsCont.style.scrollbarWidth = "none";
+          epItemsCont.style.msOverflowStyle = "none";
+          epSelectCont.appendChild(epItemsCont);
+
+          const controlsCont = document.createElement("div");
+          controlsCont.id = "torrent-controls-cont";
+          controlsCont.style.display = "flex";
+          controlsCont.style.alignItems = "center";
+          controlsCont.style.justifyContent = "center";
+          controlsCont.style.flexWrap = "wrap";
+          controlsCont.style.gap = "10px";
+          controlsCont.style.padding = "0 0 10px 0";
 
           const groupSelectCont = document.createElement("div");
-          groupSelectCont.style.padding = "0 0 10px 0";
 
           const groupSelect = document.createElement("select");
           groupSelect.id = "group-select";
@@ -296,12 +317,13 @@ function addTorrentTab() {
           defaultOption.textContent = "All Groups";
           groupSelect.appendChild(defaultOption);
           groupSelectCont.appendChild(groupSelect);
+          controlsCont.appendChild(groupSelectCont);
+          epSelectCont.appendChild(controlsCont);
 
           const listContainer = document.createElement("div");
           listContainer.id = "torrent-list-cont";
 
           torrentContainer.appendChild(epSelectCont);
-          torrentContainer.appendChild(groupSelectCont);
           torrentContainer.appendChild(listContainer);
 
           let currentSelectedEp = savedActiveEp;
@@ -327,7 +349,7 @@ function addTorrentTab() {
             updateActiveStyling();
             updateFilterStyle("#", currentSelectedGroup);
           });
-          epSelectCont.appendChild(allItem);
+          epItemsCont.appendChild(allItem);
 
           const batchItem = document.createElement("div");
           batchItem.className = "ep-item";
@@ -338,7 +360,7 @@ function addTorrentTab() {
             updateActiveStyling();
             updateFilterStyle("Batch", currentSelectedGroup);
           });
-          epSelectCont.appendChild(batchItem);
+          epItemsCont.appendChild(batchItem);
 
           function updateActiveStyling() {
             const items = epSelectCont.querySelectorAll(".ep-item");
@@ -375,12 +397,12 @@ function addTorrentTab() {
               updateFilterStyle(epNum, currentSelectedGroup);
             });
 
-            // Insert at the exact index (+2 because "#" and "Batch" take up indices 0 and 1)
-            const insertBeforeNode = epSelectCont.children[targetIndex + 2];
+            // Insert at the exact index (allItem and batchItem take up indices 0 and 1)
+            const insertBeforeNode = epItemsCont.children[targetIndex + 2];
             if (insertBeforeNode) {
-              epSelectCont.insertBefore(epItem, insertBeforeNode);
+              epItemsCont.insertBefore(epItem, insertBeforeNode);
             } else {
-              epSelectCont.appendChild(epItem);
+              epItemsCont.appendChild(epItem);
             }
           }
 
@@ -436,7 +458,6 @@ function addTorrentTab() {
             const loadMoreBtn = document.createElement("div");
             loadMoreBtn.className = "prompt-tab-menu";
             loadMoreBtn.style.textAlign = "center";
-            loadMoreBtn.style.marginTop = "10px";
             loadMoreBtn.style.cursor = "pointer";
             loadMoreBtn.textContent = `Load More (Showing ${torrentData.results.length} of ${torrentData.total})`;
 
@@ -481,7 +502,7 @@ function addTorrentTab() {
               }
             });
 
-            torrentContainer.appendChild(loadMoreBtn);
+            controlsCont.appendChild(loadMoreBtn);
           }
         }
       }
