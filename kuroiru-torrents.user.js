@@ -6,7 +6,7 @@
 // @grant       GM_xmlhttpRequest
 // @grant       GM_setValue
 // @grant       GM_getValue
-// @version     0.3
+// @version     0.4
 // @author      irasnalida
 // @description Add torrent sites
 // @updateURL   https://raw.githubusercontent.com/irasnalida/userscripts/main/kuroiru-torrents.user.js
